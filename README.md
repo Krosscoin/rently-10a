@@ -1,4 +1,4 @@
-# Rently-10a
+# Project 1
 
 A project built with KrossBuild
 
