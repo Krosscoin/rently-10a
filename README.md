@@ -1,4 +1,4 @@
-# Project 1
+# Dapp 1
 
 A project built with KrossBuild
 
