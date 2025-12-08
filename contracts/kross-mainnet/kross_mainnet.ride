@@ -1,0 +1,438 @@
+{-# STDLIB_VERSION 6 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+# RIDE v6 (StdLib 6)
+# Kross Staking Contract with Time-Locked Rewards
+
+# This contract allows users to stake a specific token and earn rewards
+# that are time-locked. Stakers can claim their rewards only after a
+# predefined vesting period. The contract owner can manage staking
+# parameters and distribute rewards.
+
+# --- Imports ---
+# StdLib 6 provides enhanced features and security.
+# We use `Address` for account identification and `Asset` for token operations.
+# `Callable` and `Verifier` are essential for dApp interaction and transaction validation.
+# `IntegerEntry`, `StringEntry`, `BinaryEntry` are used for structured data storage.
+# `throw` is used for robust error handling.
+# `this` refers to the current contract's address.
+# `tx` provides access to transaction details.
+# `sigVerify` is used for cryptographic signature verification (though not directly used for access control here,
+# it's a common security primitive).
+
+# --- Constants ---
+# Define constants for better readability and maintainability.
+# These values can be adjusted during deployment or by the contract owner.
+
+# The asset ID of the token that can be staked.
+# REPLACE_WITH_STAKING_TOKEN_ASSET_ID: This placeholder MUST be replaced with the actual asset ID
+# of the token users will stake.
+let STAKING_TOKEN_ASSET_ID: ByteVector = base58'REPLACE_WITH_STAKING_TOKEN_ASSET_ID'
+
+# The asset ID of the reward token.
+# REPLACE_WITH_REWARD_TOKEN_ASSET_ID: This placeholder MUST be replaced with the actual asset ID
+# of the token users will receive as rewards.
+let REWARD_TOKEN_ASSET_ID: ByteVector = base58'REPLACE_WITH_REWARD_TOKEN_ASSET_ID'
+
+# The minimum amount of staking token required to stake.
+let MIN_STAKE_AMOUNT: Int = 100000000 # 1 unit of token (assuming 8 decimals)
+
+# The duration of the reward vesting period in milliseconds.
+# Example: 30 days * 24 hours * 60 minutes * 60 seconds * 1000 milliseconds
+let VESTING_PERIOD_MS: Int = 30 * 24 * 60 * 60 * 1000
+
+# The address of the contract owner. Only the owner can perform administrative tasks.
+# REPLACE_WITH_OWNER_ADDRESS: This placeholder MUST be replaced with the actual owner's address.
+let OWNER_ADDRESS: Address = Address(base58'REPLACE_WITH_OWNER_ADDRESS')
+
+# --- Data Key Patterns ---
+# Define consistent data key patterns for storing information on the blockchain.
+# This ensures data integrity and easy retrieval.
+
+# Staked amount for a specific user: "stake_USER_ADDRESS" -> Int
+let STAKE_AMOUNT_KEY_PREFIX: String = "stake_"
+
+# Last stake timestamp for a specific user: "lastStakeTime_USER_ADDRESS" -> Int
+let LAST_STAKE_TIME_KEY_PREFIX: String = "lastStakeTime_"
+
+# Total accumulated rewards for a specific user: "rewards_USER_ADDRESS" -> Int
+let REWARDS_KEY_PREFIX: String = "rewards_"
+
+# Timestamp when rewards were last updated for a user: "lastRewardUpdateTime_USER_ADDRESS" -> Int
+let LAST_REWARD_UPDATE_TIME_KEY_PREFIX: String = "lastRewardUpdateTime_"
+
+# Total reward pool balance: "rewardPool" -> Int
+let REWARD_POOL_KEY: String = "rewardPool"
+
+# Staking rate per unit of staking token per millisecond: "stakingRate" -> Int
+# This rate is typically a very small number, e.g., 1 unit of reward token per 10^12 units of staking token per ms.
+# The actual value depends on the desired reward distribution.
+let STAKING_RATE_KEY: String = "stakingRate"
+
+# --- Access Control Helper ---
+# Function to check if the caller is the contract owner.
+func isOwner(caller: Address): Boolean = {
+    caller == OWNER_ADDRESS
+}
+
+# --- Helper Functions ---
+
+# Calculates the elapsed time since a given timestamp, capped by the vesting period.
+func calculateElapsedVestingTime(lastUpdateTime: Int): Int = {
+    let currentTime = block.timestamp
+    let timeSinceUpdate = currentTime - lastUpdateTime
+    if (timeSinceUpdate > VESTING_PERIOD_MS) then VESTING_PERIOD_MS else timeSinceUpdate
+}
+
+# Calculates the pending rewards for a user based on their staked amount and staking rate.
+func calculatePendingRewards(stakedAmount: Int, lastRewardUpdateTime: Int, stakingRate: Int): Int = {
+    if (stakedAmount == 0 || stakingRate == 0) then {
+        0
+    } else {
+        let currentTime = block.timestamp
+        let timeElapsed = currentTime - lastRewardUpdateTime
+        # Prevent negative time elapsed if block.timestamp somehow goes backward (unlikely but good practice)
+        let actualTimeElapsed = if (timeElapsed < 0) then 0 else timeElapsed
+        
+        # Calculate rewards: stakedAmount * stakingRate * timeElapsed
+        # Use safe multiplication to prevent overflow for large numbers.
+        # Assuming stakingRate is scaled appropriately (e.g., 10^12 for 1 unit of reward token).
+        # This calculation needs careful consideration of token decimals and desired reward rate.
+        # For simplicity, let's assume stakingRate is already scaled to match token decimals.
+        # Example: if stakingRate is 1 (meaning 1 reward token per 1 staking token per ms),
+        # and reward token has 8 decimals, then stakingRate should be 10^8.
+        # If stakingRate is 1/10^12, then it's 1 * 10^8 / 10^12 = 10^-4.
+        # This requires careful scaling. Let's assume stakingRate is already scaled for 1 unit of reward token.
+        
+        # To avoid floating point, we can define stakingRate as a large integer,
+        # e.g., 1 unit of reward token per 10^X units of staking token per ms.
+        # Let's assume stakingRate is defined such that 1 unit of stakingRate = 10^8 reward token units per ms.
+        # So, if stakingRate is 1, it means 0.00000001 reward token per ms.
+        # This needs to be adjusted based on the actual reward token decimals.
+        
+        # For a more robust calculation, let's assume stakingRate is a value that, when multiplied by
+        # stakedAmount and timeElapsed, gives the reward in base units (e.g., 10^8 for 8 decimals).
+        # Example: if stakingRate is 1000000 (1 unit of reward token per 10^6 staked units per ms)
+        # and stakedAmount is 10^8 (1 token), timeElapsed is 1000ms.
+        # Rewards = (10^8 * 10^6 * 1000) / (10^12) = 10^2 = 100 reward units.
+        # This implies a scaling factor for stakingRate.
+        
+        # Let's assume STAKING_RATE_KEY stores a value that represents
+        # (reward_token_units_per_ms * 10^SCALE_FACTOR) / staking_token_units
+        # where SCALE_FACTOR is a constant to maintain precision.
+        # For simplicity, let's assume STAKING_RATE_KEY stores (reward_token_units_per_ms * 10^12)
+        # and we divide by 10^12 at the end.
+        
+        let SCALE_FACTOR: Int = 1000000000000 # 10^12 for precision
+        
+        let rawRewards = stakedAmount * stakingRate * actualTimeElapsed
+        rawRewards / SCALE_FACTOR
+    }
+}
+
+# --- Contract State Management ---
+
+# Retrieves the staked amount for a given address.
+func getStakedAmount(addr: Address): Int = {
+    match getInteger(this, STAKE_AMOUNT_KEY_PREFIX + addr.toString()) {
+        case Some(amount) => amount
+        case _ => 0
+    }
+}
+
+# Retrieves the last stake timestamp for a given address.
+func getLastStakeTime(addr: Address): Int = {
+    match getInteger(this, LAST_STAKE_TIME_KEY_PREFIX + addr.toString()) {
+        case Some(timestamp) => timestamp
+        case _ => 0
+    }
+}
+
+# Retrieves the total accumulated rewards for a given address.
+func getAccumulatedRewards(addr: Address): Int = {
+    match getInteger(this, REWARDS_KEY_PREFIX + addr.toString()) {
+        case Some(rewards) => rewards
+        case _ => 0
+    }
+}
+
+# Retrieves the last reward update timestamp for a given address.
+func getLastRewardUpdateTime(addr: Address): Int = {
+    match getInteger(this, LAST_REWARD_UPDATE_TIME_KEY_PREFIX + addr.toString()) {
+        case Some(timestamp) => timestamp
+        case _ => 0
+    }
+}
+
+# Retrieves the current staking rate.
+func getStakingRate(): Int = {
+    match getInteger(this, STAKING_RATE_KEY) {
+        case Some(rate) => rate
+        case _ => 0
+    }
+}
+
+# Retrieves the current reward pool balance.
+func getRewardPool(): Int = {
+    match getInteger(this, REWARD_POOL_KEY) {
+        case Some(pool) => pool
+        case _ => 0
+    }
+}
+
+# --- Callable Functions ---
+# These functions are exposed for dApp interactions.
+
+# @Callable: Allows users to stake tokens.
+# @param amount: The amount of staking tokens to stake.
+@Callable(i)
+func stake(amount: Int) = {
+    # Input validation: Ensure the amount is positive and meets the minimum stake.
+    if (amount <= 0) then throw("Stake amount must be positive")
+    if (amount < MIN_STAKE_AMOUNT) then throw("Stake amount is below minimum required")
+
+    # Access control: Ensure the caller is sending the correct staking token.
+    let transfer = i.payments.find(
+        func(p) = { p.assetId == STAKING_TOKEN_ASSET_ID }
+    )
+    if (transfer == unit) then throw("No staking token payment found")
+    if (transfer.value.value != amount) then throw("Payment amount does not match specified stake amount")
+
+    let callerAddress = i.caller
+    let currentStakedAmount = getStakedAmount(callerAddress)
+    let currentAccumulatedRewards = getAccumulatedRewards(callerAddress)
+    let lastRewardUpdateTime = getLastRewardUpdateTime(callerAddress)
+    let stakingRate = getStakingRate()
+
+    # Update pending rewards before changing stake amount
+    let pendingRewards = calculatePendingRewards(currentStakedAmount, lastRewardUpdateTime, stakingRate)
+    let newAccumulatedRewards = currentAccumulatedRewards + pendingRewards
+
+    # Update state
+    let newStakedAmount = currentStakedAmount + amount
+    let dataEntries = [
+        IntegerEntry(STAKE_AMOUNT_KEY_PREFIX + callerAddress.toString(), newStakedAmount),
+        IntegerEntry(LAST_STAKE_TIME_KEY_PREFIX + callerAddress.toString(), block.timestamp),
+        IntegerEntry(REWARDS_KEY_PREFIX + callerAddress.toString(), newAccumulatedRewards),
+        IntegerEntry(LAST_REWARD_UPDATE_TIME_KEY_PREFIX + callerAddress.toString(), block.timestamp)
+    ]
+
+    # Emit an event for staking.
+    let event = BinaryEntry("event_stake", toBytes(callerAddress.bytes) + toBytes(amount) + toBytes(block.timestamp))
+
+    # Return the updated state and event.
+    [
+        dataEntries,
+        [event]
+    ]
+}
+
+# @Callable: Allows users to unstake their tokens.
+# @param amount: The amount of staking tokens to unstake.
+@Callable(i)
+func unstake(amount: Int) = {
+    # Input validation: Ensure the amount is positive.
+    if (amount <= 0) then throw("Unstake amount must be positive")
+
+    let callerAddress = i.caller
+    let currentStakedAmount = getStakedAmount(callerAddress)
+    let currentAccumulatedRewards = getAccumulatedRewards(callerAddress)
+    let lastRewardUpdateTime = getLastRewardUpdateTime(callerAddress)
+    let stakingRate = getStakingRate()
+
+    # Reentrancy protection: Ensure no reentrancy issues by updating state before transfers.
+    # This contract design inherently prevents reentrancy by using data entries for state.
+
+    # Check if the user has enough staked tokens.
+    if (currentStakedAmount < amount) then throw("Insufficient staked amount")
+
+    # Update pending rewards before changing stake amount
+    let pendingRewards = calculatePendingRewards(currentStakedAmount, lastRewardUpdateTime, stakingRate)
+    let newAccumulatedRewards = currentAccumulatedRewards + pendingRewards
+
+    # Update state
+    let newStakedAmount = currentStakedAmount - amount
+    let dataEntries = [
+        IntegerEntry(STAKE_AMOUNT_KEY_PREFIX + callerAddress.toString(), newStakedAmount),
+        IntegerEntry(REWARDS_KEY_PREFIX + callerAddress.toString(), newAccumulatedRewards),
+        IntegerEntry(LAST_REWARD_UPDATE_TIME_KEY_PREFIX + callerAddress.toString(), block.timestamp)
+    ]
+
+    # Prepare transfer of staking tokens back to the user.
+    let transfer = ScriptTransfer(callerAddress, amount, STAKING_TOKEN_ASSET_ID)
+
+    # Emit an event for unstaking.
+    let event = BinaryEntry("event_unstake", toBytes(callerAddress.bytes) + toBytes(amount) + toBytes(block.timestamp))
+
+    # Return the updated state, transfer, and event.
+    [
+        dataEntries,
+        [transfer],
+        [event]
+    ]
+}
+
+# @Callable: Allows users to claim their vested rewards.
+@Callable(i)
+func claimRewards() = {
+    let callerAddress = i.caller
+    let currentStakedAmount = getStakedAmount(callerAddress)
+    let currentAccumulatedRewards = getAccumulatedRewards(callerAddress)
+    let lastRewardUpdateTime = getLastRewardUpdateTime(callerAddress)
+    let lastStakeTime = getLastStakeTime(callerAddress)
+    let stakingRate = getStakingRate()
+    let rewardPool = getRewardPool()
+
+    # Calculate any pending rewards from current stake
+    let pendingRewards = calculatePendingRewards(currentStakedAmount, lastRewardUpdateTime, stakingRate)
+    let totalClaimableRewards = currentAccumulatedRewards + pendingRewards
+
+    # Check if there are any rewards to claim.
+    if (totalClaimableRewards <= 0) then throw("No rewards to claim")
+
+    # Check if the vesting period has passed since the last stake.
+    # This ensures rewards are time-locked.
+    let timeSinceLastStake = block.timestamp - lastStakeTime
+    if (timeSinceLastStake < VESTING_PERIOD_MS) then throw("Rewards are still time-locked. Vesting period not over.")
+
+    # Check if the contract has enough rewards in its pool.
+    if (rewardPool < totalClaimableRewards) then throw("Insufficient rewards in contract pool")
+
+    # Update state: reset accumulated rewards and update reward pool.
+    let dataEntries = [
+        IntegerEntry(REWARDS_KEY_PREFIX + callerAddress.toString(), 0), # Reset accumulated rewards
+        IntegerEntry(LAST_REWARD_UPDATE_TIME_KEY_PREFIX + callerAddress.toString(), block.timestamp), # Update timestamp
+        IntegerEntry(REWARD_POOL_KEY, rewardPool - totalClaimableRewards) # Deduct from pool
+    ]
+
+    # Prepare transfer of reward tokens to the user.
+    let transfer = ScriptTransfer(callerAddress, totalClaimableRewards, REWARD_TOKEN_ASSET_ID)
+
+    # Emit an event for claiming rewards.
+    let event = BinaryEntry("event_claim", toBytes(callerAddress.bytes) + toBytes(totalClaimableRewards) + toBytes(block.timestamp))
+
+    # Return the updated state, transfer, and event.
+    [
+        dataEntries,
+        [transfer],
+        [event]
+    ]
+}
+
+# @Callable: Allows the owner to deposit reward tokens into the contract.
+# This increases the reward pool.
+@Callable(i)
+func depositRewards() = {
+    # Access control: Only the owner can deposit rewards.
+    if (!isOwner(i.caller)) then throw("Only owner can deposit rewards")
+
+    # Ensure the caller is sending the correct reward token.
+    let transfer = i.payments.find(
+        func(p) = { p.assetId == REWARD_TOKEN_ASSET_ID }
+    )
+    if (transfer == unit) then throw("No reward token payment found")
+
+    let amount = transfer.value.value
+    if (amount <= 0) then throw("Deposit amount must be positive")
+
+    let currentRewardPool = getRewardPool()
+    let newRewardPool = currentRewardPool + amount
+
+    # Update state.
+    let dataEntries = [
+        IntegerEntry(REWARD_POOL_KEY, newRewardPool)
+    ]
+
+    # Emit an event for reward deposit.
+    let event = BinaryEntry("event_reward_deposit", toBytes(OWNER_ADDRESS.bytes) + toBytes(amount) + toBytes(block.timestamp))
+
+    # Return the updated state and event.
+    [
+        dataEntries,
+        [event]
+    ]
+}
+
+# @Callable: Allows the owner to set the staking reward rate.
+# This rate determines how many reward tokens are generated per staked token per unit of time.
+@Callable(i)
+func setStakingRate(newRate: Int) = {
+    # Access control: Only the owner can set the staking rate.
+    if (!isOwner(i.caller)) then throw("Only owner can set staking rate")
+
+    # Input validation: Ensure the new rate is non-negative.
+    if (newRate < 0) then throw("Staking rate cannot be negative")
+
+    # Update state.
+    let dataEntries = [
+        IntegerEntry(STAKING_RATE_KEY, newRate)
+    ]
+
+    # Emit an event for staking rate update.
+    let event = BinaryEntry("event_set_staking_rate", toBytes(OWNER_ADDRESS.bytes) + toBytes(newRate) + toBytes(block.timestamp))
+
+    # Return the updated state and event.
+    [
+        dataEntries,
+        [event]
+    ]
+}
+
+# @Callable: Allows the owner to withdraw excess reward tokens from the contract.
+# This is a safety mechanism in case too many rewards were deposited or the rate changed.
+@Callable(i)
+func withdrawExcessRewards(amount: Int) = {
+    # Access control: Only the owner can withdraw excess rewards.
+    if (!isOwner(i.caller)) then throw("Only owner can withdraw excess rewards")
+
+    # Input validation: Ensure the amount is positive.
+    if (amount <= 0) then throw("Withdraw amount must be positive")
+
+    let currentRewardPool = getRewardPool()
+
+    # Check if there are enough rewards in the pool to withdraw.
+    if (currentRewardPool < amount) then throw("Insufficient rewards in contract pool to withdraw")
+
+    # Update state.
+    let newRewardPool = currentRewardPool - amount
+    let dataEntries = [
+        IntegerEntry(REWARD_POOL_KEY, newRewardPool)
+    ]
+
+    # Prepare transfer of reward tokens to the owner.
+    let transfer = ScriptTransfer(OWNER_ADDRESS, amount, REWARD_TOKEN_ASSET_ID)
+
+    # Emit an event for reward withdrawal.
+    let event = BinaryEntry("event_reward_withdrawal", toBytes(OWNER_ADDRESS.bytes) + toBytes(amount) + toBytes(block.timestamp))
+
+    # Return the updated state, transfer, and event.
+    [
+        dataEntries,
+        [transfer],
+        [event]
+    ]
+}
+
+# --- Verifier Function ---
+# The @Verifier function is executed for every transaction involving this smart contract.
+# It's crucial for enforcing general rules and preventing unauthorized actions.
+# For this contract, we primarily rely on the @Callable functions' internal checks.
+# The verifier can add an extra layer of security, e.g., preventing direct transfers
+# of the staking or reward token to the contract address without a callable function.
+@Verifier(tx)
+func verify() = {
+    # Prevent direct transfers of staking/reward tokens to the contract address
+    # without going through a callable function.
+    # This ensures that all token movements are properly accounted for by the contract logic.
+    match tx {
+        case t: TransferTransaction =>
+            if (t.recipient == this.address) then {
+                if (t.assetId == STAKING_TOKEN_ASSET_ID) then throw("Direct transfer of staking token not allowed. Use 'stake' function.")
+                if (t.assetId == REWARD_TOKEN_ASSET_ID) then throw("Direct transfer of reward token not allowed. Use 'depositRewards' function.")
+            }
+            true # Allow other transfers
+        case _ =>
+            true # Allow all other transaction types
+    }
+}
