@@ -1,168 +1,142 @@
 import React, { useState } from 'react';
-import { Helmet } from 'react-helmet';
-
-interface ContactFormState {
-  name: string;
-  email: string;
-  subject: string;
-  message: string;
-}
 
 export const Contact: React.FC = () => {
-  const [formData, setFormData] = useState<ContactFormState>({
+  const [formData, setFormData] = useState({
     name: '',
     email: '',
     subject: '',
     message: '',
   });
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [submitSuccess, setSubmitSuccess] = useState<boolean | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
-    if (submitSuccess !== null) { // Reset success/error state on new input
-      setSubmitSuccess(null);
-      setError(null);
-    }
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    setError(null);
-    setSubmitSuccess(null);
+    setStatus('loading');
+    setErrorMessage(null);
 
+    // Simulate API call
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const response = await new Promise((resolve) => setTimeout(() => {
+        if (formData.name && formData.email && formData.subject && formData.message) {
+          resolve({ success: true, message: 'Your message has been sent successfully!' });
+        } else {
+          resolve({ success: false, message: 'Please fill in all fields.' });
+        }
+      }, 1500));
 
-      // Basic validation
-      if (!formData.name || !formData.email || !formData.message) {
-        throw new Error('Please fill in all required fields.');
+      if ((response as any).success) {
+        setStatus('success');
+        setFormData({ name: '', email: '', subject: '', message: '' }); // Clear form
+      } else {
+        setStatus('error');
+        setErrorMessage((response as any).message);
       }
-      if (!/
-^(([^<>()[Q\\.,;:\s@\"]+(\.[^<>()[Q\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$
-/.test(formData.email)) {
-        throw new Error('Please enter a valid email address.');
-      }
-
-      setSubmitSuccess(true);
-      setFormData({ name: '', email: '', subject: '', message: '' }); // Clear form
-    } catch (err: any) {
-      setError(err.message || 'Failed to send message. Please try again.');
-      setSubmitSuccess(false);
-    } finally {
-      setIsSubmitting(false);
+    } catch (error) {
+      setStatus('error');
+      setErrorMessage('Failed to send message. Please try again later.');
     }
   };
 
   return (
-    <div className="container mx-auto my-16 px-4 md:px-8">
-      <Helmet>
-        <title>Contact Us - Jollof</title>
-        <meta name="description" content="Get in touch with Jollof restaurant for reservations, inquiries, or feedback." />
-      </Helmet>
-      <h1 className="text-5xl font-extrabold text-center text-primary mb-16 animate-fade-in-down">Get in Touch</h1>
+    <div className="container mx-auto p-4 md:p-8 lg:p-12 mb-12">
+      <h1 className="text-5xl font-extrabold text-center mb-12 text-foreground">Get in Touch</h1>
 
-      <div className="grid md:grid-cols-2 gap-16">
-        <div className="space-y-8">
-          <h2 className="text-3xl font-bold text-accent mb-4">Visit Us</h2>
-          <p className="text-lg text-muted-foreground">
-            We would love to welcome you to Jollof. Find us at:
-            <br />
-            <strong className="text-primary">123 Flavor Street, Culinary City, Taste Nation</strong>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        <section className="contact-info bg-card text-card-foreground p-8 md:p-10 rounded-lg shadow-xl animate-fade-in-up">
+          <h2 className="text-3xl font-bold mb-6 text-primary border-b-2 border-primary pb-3">Visit or Call Us</h2>
+          <p className="text-lg mb-4 leading-relaxed">
+            We'd love to hear from you! Whether you have a reservation request, a catering inquiry, or just want to say hello, feel free to reach out.
           </p>
-          <h2 className="text-3xl font-bold text-accent mb-4">Opening Hours</h2>
-          <ul className="text-lg text-muted-foreground space-y-2">
-            <li>Tuesday - Thursday: 11:00 AM - 10:00 PM</li>
-            <li>Friday - Saturday: 11:00 AM - 11:00 PM</li>
-            <li>Sunday: 12:00 PM - 9:00 PM</li>
-            <li>Monday: Closed</li>
-          </ul>
-          <h2 className="text-3xl font-bold text-accent mb-4">Contact Information</h2>
-          <p className="text-lg text-muted-foreground">
-            Phone: <a href="tel:+11234567890" className="text-accent hover:underline">(123) 456-7890</a>
-            <br />
-            Email: <a href="mailto:info@jollofrestaurant.com" className="text-accent hover:underline">info@jollofrestaurant.com</a>
-          </p>
-        </div>
+          <div className="space-y-4 text-left">
+            <p className="flex items-center text-lg"><strong className="w-24 font-semibold text-accent-foreground">Address:</strong> 123 Flavor Street, Culinary City, Africa</p>
+            <p className="flex items-center text-lg"><strong className="w-24 font-semibold text-accent-foreground">Phone:</strong> (123) 456-7890</p>
+            <p className="flex items-center text-lg"><strong className="w-24 font-semibold text-accent-foreground">Email:</strong> <a href="mailto:info@jollof.com" className="text-primary hover:underline">info@jollof.com</a></p>
+            <p className="flex items-center text-lg"><strong className="w-24 font-semibold text-accent-foreground">Hours:</strong> Tues - Sun: 11 AM - 10 PM (Closed Mondays)</p>
+          </div>
+          <div className="mt-8">
+            <h3 className="text-2xl font-bold mb-4 text-primary">Find Us on the Map</h3>
+            <div className="aspect-video w-full rounded-lg overflow-hidden shadow-lg">
+              {/* Example Google Map embed - replace with actual embed code for production */}
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3153.2982823678074!2d144.9630575!3d-37.8172!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x6ad642b36e3b08fd%3A0x5045675fb46e100!2sFederation%20Square!5e0!3m2!1sen!2sau!4v1706790928784!5m2!1sen!2sau"
+                width="100%" height="450" style={{ border: 0 }} allowFullScreen={true} loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade" title="Restaurant Location">
+              </iframe>
+            </div>
+          </div>
+        </section>
 
-        <div>
-          <h2 className="text-3xl font-bold text-accent mb-8">Send Us a Message</h2>
+        <section className="contact-form bg-card text-card-foreground p-8 md:p-10 rounded-lg shadow-xl animate-fade-in-up delay-200">
+          <h2 className="text-3xl font-bold mb-6 text-primary border-b-2 border-primary pb-3">Send Us a Message</h2>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-primary mb-2">Name</label>
+              <label htmlFor="name" className="block text-lg font-semibold mb-2">Name</label>
               <input
                 type="text"
                 id="name"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                className="input-field w-full p-3 border border-border rounded-md bg-input text-foreground focus:ring-2 focus:ring-accent focus:border-transparent"
+                className="w-full p-3 border border-border rounded-md focus:ring-2 focus:ring-primary focus:border-primary bg-input text-input-foreground"
                 required
-                aria-required="true"
-                aria-label="Your Name"
               />
             </div>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-primary mb-2">Email</label>
+              <label htmlFor="email" className="block text-lg font-semibold mb-2">Email</label>
               <input
                 type="email"
                 id="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="input-field w-full p-3 border border-border rounded-md bg-input text-foreground focus:ring-2 focus:ring-accent focus:border-transparent"
+                className="w-full p-3 border border-border rounded-md focus:ring-2 focus:ring-primary focus:border-primary bg-input text-input-foreground"
                 required
-                aria-required="true"
-                aria-label="Your Email Address"
               />
             </div>
             <div>
-              <label htmlFor="subject" className="block text-sm font-medium text-primary mb-2">Subject (Optional)</label>
+              <label htmlFor="subject" className="block text-lg font-semibold mb-2">Subject</label>
               <input
                 type="text"
                 id="subject"
                 name="subject"
                 value={formData.subject}
                 onChange={handleChange}
-                className="input-field w-full p-3 border border-border rounded-md bg-input text-foreground focus:ring-2 focus:ring-accent focus:border-transparent"
-                aria-label="Subject of your message"
+                className="w-full p-3 border border-border rounded-md focus:ring-2 focus:ring-primary focus:border-primary bg-input text-input-foreground"
+                required
               />
             </div>
             <div>
-              <label htmlFor="message" className="block text-sm font-medium text-primary mb-2">Message</label>
+              <label htmlFor="message" className="block text-lg font-semibold mb-2">Message</label>
               <textarea
                 id="message"
                 name="message"
-                rows={5}
+                rows={6}
                 value={formData.message}
                 onChange={handleChange}
-                className="input-field w-full p-3 border border-border rounded-md bg-input text-foreground focus:ring-2 focus:ring-accent focus:border-transparent"
+                className="w-full p-3 border border-border rounded-md focus:ring-2 focus:ring-primary focus:border-primary bg-input text-input-foreground"
                 required
-                aria-required="true"
-                aria-label="Your Message"
               ></textarea>
             </div>
             <button
               type="submit"
-              className="bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-300 px-8 py-4 rounded-md text-lg font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={isSubmitting}
-              aria-label="Send Message"
+              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-300 text-lg px-6 py-3 rounded-md font-semibold"
+              disabled={status === 'loading'}
             >
-              {isSubmitting ? 'Sending...' : 'Send Message'}
+              {status === 'loading' ? 'Sending...' : 'Send Message'}
             </button>
-
-            {submitSuccess === true && (
-              <p className="text-green-600 mt-4" role="status">Your message has been sent successfully!</p>
+            {status === 'success' && (
+              <p className="mt-4 text-center text-green-600 dark:text-green-400 font-semibold">Your message has been sent successfully!</p>
             )}
-            {submitSuccess === false && error && (
-              <p className="text-red-600 mt-4" role="alert">Error: {error}</p>
+            {status === 'error' && (
+              <p className="mt-4 text-center text-red-600 dark:text-red-400 font-semibold">{errorMessage || 'Something went wrong. Please try again.'}</p>
             )}
           </form>
-        </div>
+        </section>
       </div>
     </div>
   );

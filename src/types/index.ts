@@ -1,3 +1,8 @@
-/* src/types/index.ts */
-// Currently no global types needed beyond what's inline in components.
-// This file is a placeholder for future type definitions.
+export interface MenuItem {
+  id: number;
+  name: string;
+  description: string;
+  price: string;
+  imageUrl: string;
+  category: 'starters' | 'main' | 'sides' | 'drinks';
+}
