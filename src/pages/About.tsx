@@ -1,71 +1,65 @@
 import React from 'react';
-import { Helmet } from 'react-helmet';
 
 export const About: React.FC = () => {
   return (
-    <div className="container mx-auto my-16 px-4 md:px-8">
-      <Helmet>
-        <title>About Us - Jollof</title>
-        <meta name="description" content="Learn more about Jollof, an African restaurant dedicated to authentic cuisine." />
-      </Helmet>
-      <h1 className="text-5xl font-extrabold text-center text-primary mb-16 animate-fade-in-down">Our Passion for African Cuisine</h1>
+    <div className="container mx-auto p-4 md:p-8 lg:p-12">
+      <h1 className="text-5xl font-extrabold text-center mb-12 text-foreground">Our Journey</h1>
 
-      <section className="grid md:grid-cols-2 gap-16 items-center mb-16">
-        <div className="order-2 md:order-1 space-y-6 text-lg text-muted-foreground loading-relaxed">
-          <h2 className="text-3xl font-bold text-accent mb-4">The Jollof Story</h2>
-          <p>
-            Jollof was born from a deep love for the rich culinary heritage of West Africa. Chef Adebayo, our founder, envisioned a place where the vibrant flavors,
-            aromatic spices, and warm hospitality of his Nigerian upbringing could be shared with the world. He moved to this city with a dream and a collection
-            of his grandmother's treasured recipes, each telling a story of family, tradition, and joy.
-          </p>
-          <p>
-            From the bustling markets of Lagos to our cozy restaurant kitchen, every ingredient is carefully selected to ensure authenticity and freshness.
-            We believe that food is not just sustenance, but a powerful medium for cultural exchange and connection. At Jollof, we don't just serve meals;
-            we offer an experience that transports you to the heart of Africa.
-          </p>
-        </div>
-        <div className="order-1 md:order-2">
-          <img
-            src="https://via.placeholder.com/600x400/967BB6/FFFFFF?text=Chef_Adebayo"
-            alt="Chef Adebayo in his kitchen, smiling"
-            className="rounded-lg shadow-xl w-full h-auto object-cover"
-          />
-        </div>
-      </section>
-
-      <section className="grid md:grid-cols-2 gap-16 items-center mb-16">
-        <div>
-          <img
-            src="https://via.placeholder.com/600x400/FEB2B2/FFFFFF?text=Restaurant_Interior"
-            alt="Warm and inviting interior of the Jollof restaurant"
-            className="rounded-lg shadow-xl w-full h-auto object-cover"
-          />
-        </div>
-        <div className="space-y-6 text-lg text-muted-foreground loading-relaxed">
-          <h2 className="text-3xl font-bold text-accent mb-4">Our Philosophy</h2>
-          <p>
-            Our philosophy is simple: celebrate authentic flavors, embrace sustainable practices, and create a welcoming atmosphere for everyone.
-            We are committed to using locally sourced produce whenever possible, supporting our community, and minimizing our environmental footprint.
-          </p>
-          <p>
-            The Jollof culinary team is a family of passionate chefs and food enthusiasts who meticulously prepare each dish with dedication and respect for tradition.
-            We constantly strive for excellence, ensuring that every bite is a delightful revelation of taste and culture.
-          </p>
-        </div>
-      </section>
-
-      <section className="text-center bg-muted py-16 rounded-lg px-4 md:px-8">
-        <h2 className="text-4xl font-bold text-primary mb-6">Taste the Tradition, Feel the Culture</h2>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-          Join us at Jollof for an unforgettable dining experience where every meal is a celebration.
+      <section className="about-story bg-card text-card-foreground p-8 md:p-12 rounded-lg shadow-xl mb-12 leading-relaxed text-lg">
+        <h2 className="text-4xl font-bold text-center mb-8 border-b-2 border-primary pb-3 inline-block mx-auto block w-fit">The Heart of Jollof</h2>
+        <p className="mb-6">
+          Welcome to Jollof, a culinary haven where the rich traditions and vibrant flavors of African cuisine come alive. Our journey began with a simple yet profound passion: to share the authentic taste of Africa with the world. Founded by a team of African food enthusiasts and master chefs, Jollof is more than just a restaurant; it's a celebration of heritage, community, and the soulful art of cooking.
         </p>
-        <a
-          href="/contact"
-          className="inline-block bg-accent text-accent-foreground hover:bg-accent/90 transition-colors duration-300 px-8 py-4 rounded-full text-lg font-semibold shadow-lg"
-        >
-          Make a Reservation
-        </a>
+        <p className="mb-6">
+          Every dish at Jollof is a labor of love, crafted with the freshest, locally-sourced ingredients whenever possible, and spices directly imported from various regions of Africa. We meticulously follow time-honored recipes, passed down through generations, ensuring that each bite transports you to the bustling markets and warm homes of the continent.
+        </p>
+        <p>
+          From the smoky depths of our Jollof Rice to the fiery kick of our Suya, we invite you to embark on an unforgettable gastronomic adventure. We believe food is a universal language, and through our dishes, we aim to share stories, foster connections, and create cherished memories.
+        </p>
       </section>
+
+      <section className="our-values bg-background text-foreground p-8 md:p-12 rounded-lg shadow-xl mb-12">
+        <h2 className="text-4xl font-bold text-center mb-8 border-b-2 border-primary pb-3 inline-block mx-auto block w-fit">Our Values</h2>
+        <div className="grid md:grid-cols-3 gap-8 text-center">
+          <div className="value-card p-6 bg-card text-card-foreground rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+            <h3 className="text-2xl font-semibold mb-3 text-primary">Authenticity</h3>
+            <p className="text-muted-foreground">We commit to serving genuine African flavors, respecting traditional recipes and cooking methods.</p>
+          </div>
+          <div className="value-card p-6 bg-card text-card-foreground rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+            <h3 className="text-2xl font-semibold mb-3 text-primary">Quality</h3>
+            <p className="text-muted-foreground">Only the freshest, highest-quality ingredients make it into our kitchen, ensuring every dish is exceptional.</p>
+          </div>
+          <div className="value-card p-6 bg-card text-card-foreground rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+            <h3 className="text-2xl font-semibold mb-3 text-primary">Community</h3>
+            <p className="text-muted-foreground">We believe in the power of food to bring people together, creating a warm and welcoming atmosphere for all.</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="team bg-card text-card-foreground p-8 md:p-12 rounded-lg shadow-xl">
+        <h2 className="text-4xl font-bold text-center mb-8 border-b-2 border-primary pb-3 inline-block mx-auto block w-fit">Meet Our Team</h2>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 text-center">
+          <div className="team-member p-6">
+            <img src="https://avatars.githubusercontent.com/u/84109400?v=4" alt="Chef Amina" className="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-primary shadow-lg" />
+            <h3 className="text-2xl font-semibold mb-2">Chef Amina Diallo</h3>
+            <p className="text-muted-foreground">Head Chef & Co-Founder</p>
+            <p className="mt-2 text-sm">With a lifetime of culinary experience from Senegal, Chef Amina brings authentic West African flavors to Jollof.</p>
+          </div>
+          <div className="team-member p-6">
+            <img src="https://avatars.githubusercontent.com/u/84109400?v=4" alt="Manager Obi" className="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-primary shadow-lg" />
+            <h3 className="text-2xl font-semibold mb-2">Obi Okoro</h3>
+            <p className="text-muted-foreground">Restaurant Manager</p>
+            <p className="mt-2 text-sm">Obi ensures a seamless dining experience, combining Nigerian hospitality with excellent service.</p>
+          </div>
+          <div className="team-member p-6">
+            <img src="https://avatars.githubusercontent.com/u/84109400?v=4" alt="Marketing Nana" className="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-primary shadow-lg" />
+            <h3 className="text-2xl font-semibold mb-2">Nana Mensah</h3>
+            <p className="text-muted-foreground">Marketing Lead</p>
+            <p className="mt-2 text-sm">Nana spreads the word about Jollof, sharing our story and flavors with a wider audience.</p>
+          </div>
+        </div>
+      </section>
+
     </div>
   );
 };
