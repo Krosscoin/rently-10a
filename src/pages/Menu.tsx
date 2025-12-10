@@ -1,103 +1,115 @@
 import React from 'react';
-import { Helmet } from 'react-helmet';
 
 interface MenuItem {
-  id: string;
+  id: number;
   name: string;
   description: string;
   price: string;
-  image: string;
+  imageUrl: string;
+  category: 'starters' | 'main' | 'sides' | 'drinks';
 }
 
 const menuItems: MenuItem[] = [
   {
-    id: '1',
+    id: 1,
     name: 'Jollof Rice with Chicken',
-    description: 'Our signature smoky Jollof Rice served with perfectly grilled chicken, plantains, and coleslaw.',
+    description: 'Our signature tomato-based rice, slow-cooked with aromatic spices and served with perfectly grilled chicken.',
     price: '$18.99',
-    image: 'https://via.placeholder.com/300x200/FACC15/FFFFFF?text=Jollof_Chicken',
+    imageUrl: 'https://images.unsplash.com/photo-1621868340150-a9792671e220?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTIyMDF8MHwxfHNlYXJjaHwzfHdvbiUyMHphbGxvZiUyMHJpY2UlMjBhbmQlMjBjaGlja2VufGVufDB8fHx8MTcwNjgwNzA0MXww&ixlib=rb-4.0.3&q=80&w=1080',
+    category: 'main',
   },
   {
-    id: '2',
+    id: 2,
     name: 'Ewa Agoyin',
-    description: 'Mashed beans stewed in a rich palm oil sauce, served with bread.',
-    price: '$14.50',
-    image: 'https://via.placeholder.com/300x200/84CC16/FFFFFF?text=Ewa_Agoyin',
+    description: 'Mashed beans served with a spicy palm oil sauce, a popular street food delicacy.',
+    price: '$14.00',
+    imageUrl: 'https://images.unsplash.com/photo-1605330340337-33a59573887c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTIyMDF8MHwxfHNlYXJjaHwzfHdvbiUyMGV3YSUyMGFnb3lpbnxlbnwwfHx8fDE3MDY5MjUyNTF8MA&ixlib=rb-4.0.3&q=80&w=1080',
+    category: 'main',
   },
   {
-    id: '3',
-    name: 'Pounded Yam & Egusi Soup',
-    description: 'Smooth pounded yam served with a hearty and flavorful Egusi soup, choice of meat.',
-    price: '$22.00',
-    image: 'https://via.placeholder.com/300x200/3B82F6/FFFFFF?text=Pounded_Yam',
-  },
-  {
-    id: '4',
+    id: 3,
     name: 'Suya Skewers (Beef/Chicken)',
-    description: 'Spicy grilled skewers marinated in a special blend of spices, served with sliced onions.',
-    price: '$15.99',
-    image: 'https://via.placeholder.com/300x200/F87171/FFFFFF?text=Suya',
+    description: 'Grilled skewers marinated in a rich peanut spice blend (Suya spice), served with onions and tomatoes.',
+    price: '$15.50',
+    imageUrl: 'https://images.unsplash.com/photo-1599587441548-7351654a9c68?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTIyMDF8MHwxfHNlYXJjaHwzfHdvbiUyMHN1eWElMjBza2V3ZXJzfGVufDB8fHx8MTcwNjg1MTI5OHww&ixlib=rb-4.0.3&q=80&w=1080',
+    category: 'main',
   },
   {
-    id: '5',
-    name: 'Akara (Bean Cakes)',
-    description: 'Deep-fried bean cakes made from peeled beans, seasoned with onions and peppers.',
-    price: '$8.00',
-    image: 'https://via.placeholder.com/300x200/EC4899/FFFFFF?text=Akara',
+    id: 4,
+    name: 'Akara (Bean Fritters)',
+    description: 'Deep-fried bean cakes, crispy on the outside and soft on the inside. Perfect starter!',
+    price: '$8.50',
+    imageUrl: 'https://images.unsplash.com/photo-1681997259169-dc347fb72834?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTIyMDF8MHwxfHNlYXJjaHwzfHdvbiUyMGFrYXJhJTIwYmFndWV0dGVzfGVufDB8fHx8MTcwNjkyNTI1MXww&ixlib=rb-4.0.3&q=80&w=1080',
+    category: 'starters',
   },
   {
-    id: '6',
-    name: 'Moi Moi',
-    description: 'Steamed bean pudding made from a mixture of peeled beans, peppers, and spices.',
-    price: '$9.50',
-    image: 'https://via.placeholder.com/300x200/6D28D9/FFFFFF?text=Moi_Moi',
+    id: 5,
+    name: 'Fried Plantains',
+    description: 'Sweet ripe plantains, deep-fried to golden perfection. A delicious side dish.',
+    price: '$6.00',
+    imageUrl: 'https://images.unsplash.com/photo-1605330340337-33a59573887c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTIyMDF8MHwxfHNlYXJjaHwzfHdvbiUyMGZyaWVkJTIwcGxhbnRhaW5zfGVufDB8fHx8MTcwNjkyNTMwN3ww&ixlib=rb-4.0.3&q=80&w=1080',
+    category: 'sides',
+  },
+  {
+    id: 6,
+    name: 'Chapman Drink',
+    description: 'A refreshing Nigerian mocktail made with Fanta, Sprite, Angostura bitters, and cucumber.',
+    price: '$7.00',
+    imageUrl: 'https://images.unsplash.com/photo-1589302168068-964722525541?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTIyMDF8MHwxfHNlYXJjaHwzfHdvbiUyMGNoYXBteWFuJTIwZHVpbmtzfGVufDB8fHx8MTcwNjg1MTI5OHww&ixlib=rb-4.0.3&q=80&w=1080',
+    category: 'drinks',
+  },
+    {
+    id: 7,
+    name: 'Pounded Yam & Egusi Soup',
+    description: 'Smooth pounded yam served with a rich and savory soup made from ground melon seeds, leafy greens, and assorted meats.',
+    price: '$22.50',
+    imageUrl: 'https://images.unsplash.com/photo-1579227599723-f3660db35c75?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTIyMDF8MHwxfHNlYXJjaHwzfHdvbiUyMHBvdW5kZWQlMjB5YW0lMjBhbmQlMjBlZ3VzaSUyMHNvdXB8ZW58MHx8fHwxNzA2OTI1NDI3fDA&ixlib=rb-4.0.3&q=80&w=1080',
+    category: 'main',
+  },
+  {
+    id: 8,
+    name: 'Gizdodo',
+    description: 'A delightful mix of gizzards and plantains, sautéed in a spicy tomato sauce.',
+    price: '$16.00',
+    imageUrl: 'https://images.unsplash.com/photo-1589302168068-964722525541?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTIyMDF8MHwxfHNlYXJjaHwzMHx8YmdhbCUyMGdpenpvZXRzfGVufDB8fHx8MTcwNjg1MTc3Nnw&ixlib=rb-4.0.3&q=80&w=1080',
+    category: 'starters',
+  },
+  {
+    id: 9,
+    name: 'Kunu',
+    description: 'A traditional non-alcoholic West African beverage made from millet, sorghum, or rice, often spiced with ginger.',
+    price: '$5.50',
+    imageUrl: 'https://images.unsplash.com/photo-1589302168068-964722525541?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTIyMDF8MHwxfHNlYXJjaHwzfHdvbiUyMHBvcnJpZGVnZSUyMGRyaW5raW5nfGVufDB8fHx8MTcwNjg1MTc3Nnw&ixlib=rb-4.0.3&q=80&w=1080',
+    category: 'drinks',
   },
 ];
 
 export const Menu: React.FC = () => {
+  const categories = Array.from(new Set(menuItems.map(item => item.category)));
+
   return (
-    <div className="container mx-auto my-16 px-4 md:px-8">
-      <Helmet>
-        <title>Our Menu - Jollof</title>
-        <meta name="description" content="Explore the authentic African dishes at Jollof restaurant." />
-      </Helmet>
-      <h1 className="text-5xl font-extrabold text-center text-primary mb-16 animate-fade-in-down">Our Delicious Menu</h1>
+    <div className="container mx-auto p-4 md:p-8">
+      <h1 className="text-5xl font-extrabold text-center mb-12 text-foreground">Our Exquisite Menu</h1>
 
-      <section aria-labelledby="main-dishes-heading" className="mb-16">
-        <h2 id="main-dishes-heading" className="text-3xl font-bold text-accent mb-8 border-b-2 border-accent pb-2">Main Dishes</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {menuItems.slice(0, 3).map((item) => (
-            <div key={item.id} className="bg-card text-card-foreground rounded-lg shadow-lg overflow-hidden transform hover:scale-105 transition-transform duration-300 flex flex-col">
-              <img src={item.image} alt={item.name} className="w-full h-48 object-cover" />
-              <div className="p-6 flex-grow flex flex-col justify-between">
-                <div>
-                  <h3 className="text-2xl font-semibold text-primary mb-2">{item.name}</h3>
-                  <p className="text-muted-foreground text-sm mb-4">{item.description}</p>
+      {categories.map(category => (
+        <section key={category} className="mb-12">
+          <h2 className="text-4xl font-bold text-center mb-8 capitalize text-primary border-b-2 border-primary pb-3 inline-block mx-auto block w-fit">
+            {category} Dishes
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {menuItems.filter(item => item.category === category).map(item => (
+              <div key={item.id} className="menu-card bg-card text-card-foreground rounded-lg shadow-lg overflow-hidden group hover:shadow-xl transition-shadow duration-300 transform hover:-translate-y-1">
+                <img src={item.imageUrl} alt={item.name} className="w-full h-60 object-cover group-hover:scale-105 transition-transform duration-300" />
+                <div className="p-6">
+                  <h3 className="text-2xl font-semibold mb-2">{item.name}</h3>
+                  <p className="text-muted-foreground text-base mb-4">{item.description}</p>
+                  <p className="text-primary font-bold text-xl">{item.price}</p>
                 </div>
-                <span className="text-accent text-xl font-bold self-end">{item.price}</span>
               </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section aria-labelledby="starters-sides-heading">
-        <h2 id="starters-sides-heading" className="text-3xl font-bold text-accent mb-8 border-b-2 border-accent pb-2">Starters & Sides</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {menuItems.slice(3).map((item) => (
-            <div key={item.id} className="bg-card text-card-foreground rounded-lg shadow-lg overflow-hidden transform hover:scale-105 transition-transform duration-300 flex flex-col">
-              <img src={item.image} alt={item.name} className="w-full h-48 object-cover" />
-              <div className="p-6 flex-grow flex flex-col justify-between">
-                <div>
-                  <h3 className="text-2xl font-semibold text-primary mb-2">{item.name}</h3>
-                  <p className="text-muted-foreground text-sm mb-4">{item.description}</p>
-                </div>
-                <span className="text-accent text-xl font-bold self-end">{item.price}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
   );
 };
