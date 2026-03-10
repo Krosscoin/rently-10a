@@ -1,4 +1,4 @@
-# Web 2d
+# Rently 10d
 
 A project built with KrossBuild
 
